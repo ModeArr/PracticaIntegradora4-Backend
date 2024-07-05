@@ -52,8 +52,15 @@ const initializePassport = () => {
       },
       async (username, password, done) => {
         try {
-          let user = await userService.checkUserAndPass(username, password)
-
+          const user = await userService.checkUserAndPass(username, password)
+          .then((user) => {
+            userService.setLastConnection(user._id)
+            return user
+          })
+          .catch((err) =>{
+            throw new Error(err)
+          })
+          console.log(user)
           return done(null, user);
         } catch (error) {
           return done(error);
@@ -68,7 +75,7 @@ const initializePassport = () => {
       {
         clientID: GITHUB_CLIENT_ID,
         clientSecret: GITHUB_CLIENT_SECRET,
-        callbackURL: "http://localhost:8080/api/sessions/github/callback",
+        callbackURL: "http://localhost:8080/api/user/github/callback",
       },
       async (accessToken, refreshToken, profile, done) => {
         try {

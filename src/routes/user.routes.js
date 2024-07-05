@@ -1,7 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
 import { authMdw } from "../middleware/auth.middleware.js"
-import { logoutUserCtrl, loginUserCookieCtrl, currentUserCtrl, forgotPasswordCtrl, updatePasswordCtrl, togglePremiumCtrl } from "../controllers/users.controller.js";
+import { uploadDocuments } from "../middleware/multer.middleware.js"
+import { logoutUserCtrl, loginUserCookieCtrl, currentUserCtrl, forgotPasswordCtrl, updatePasswordCtrl, togglePremiumCtrl,  uploadDocumentsCtrl} from "../controllers/users.controller.js";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.post("/login", passport.authenticate('login', {
 
 router.post("/register", passport.authenticate('register', {
   successRedirect: '/',
+  successFlash: true,
   failureRedirect: '/login',
   failureFlash: true,
   session: false,
@@ -40,5 +42,7 @@ router.post("/resetpassword", forgotPasswordCtrl)
 router.post("/updatepassword/:token", updatePasswordCtrl)
 
 router.post("/premium/:uid", authMdw(['ADMIN']), togglePremiumCtrl)
+
+router.post("/:uid/documents", authMdw(['USER','ADMIN','PREMIUM']), uploadDocuments, uploadDocumentsCtrl)
 
 export default router;

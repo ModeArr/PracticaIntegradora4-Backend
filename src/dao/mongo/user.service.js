@@ -120,7 +120,7 @@ class UserManagerService {
 
     async checkResetLink(token){
         try {
-            return userModels.findOne({ resetLink: token }).lean
+            return userModels.findOne({ resetLink: token }).lean()
         } catch (error) {
             throw Error(error) 
         }
@@ -164,6 +164,67 @@ class UserManagerService {
             throw Error(error)
         }
     }
+
+    async setLastConnection(uid) {
+        try {
+            return await userModels.findByIdAndUpdate(uid, {last_connection: Date.now()}, {returnDocument: 'after'})
+            .then((res) => {
+                return res
+            })
+            .catch((err) => {
+                throw new Error(err)
+            })
+
+        } catch (error) {
+            throw Error(error) 
+        }
+    }
+
+    async getDocument(uid, type){
+        try {
+            return await userModels.find({"_id": uid, 
+                "documents":{ 
+                $elemMatch: {
+                    "name": type
+                  }}}).lean()
+            
+        } catch (error) {
+            throw Error(error)
+        }
+    }
+
+    async setDocument(uid, type, path){
+        try {
+            const docExist = await this.getDocument(uid, type)
+            const document = { "name": type , "reference": path }
+            if (docExist.length === 0){
+                const documentAdd = await userModels.findOneAndUpdate({ _id: uid}, { $push: 
+                    { "documents": document }
+                }, {returnDocument: 'after'})
+                .then((res) => {
+                    return res.documents
+                })
+                .catch((error) => {
+                    throw Error(error)
+                })
+                return documentAdd
+            } else {
+                const documentReplace = await userModels.findOneAndUpdate({_id: uid, 'documents.name': type }, {$set : {
+                    'documents.$.reference': path
+                }}, {returnDocument: 'after'})
+                .then((res) => {
+                    return res.documents
+                })
+                .catch((error) => {
+                    throw Error(error)
+                })
+                return documentReplace
+            }
+        } catch (error) {
+            throw Error(error)
+        }
+    }
+
 
 }
 

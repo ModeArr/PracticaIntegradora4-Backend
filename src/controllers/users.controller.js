@@ -7,8 +7,9 @@ const secret = JWT_SECRET
 
 const logoutUserCtrl = async(req, res) => {
     res.clearCookie('jwt')
-    .status(200)
-    .json({
+    userService.setLastConnection()
+    res.status(200).json({
+        status: "ok",
         message: 'You have logged out'
     })
 }
@@ -94,7 +95,7 @@ const loginUserCookieCtrl = async(req, res) => {
         if (!user){
           res.status(400).json({status: "error", message: "No hay usuario con esa token"})
         }
-        return res.status(200).json({message: 'Tu contrasena fue guardad cambiada con exito'})
+        return res.status(200).json({message: 'Tu contrasena fue cambiada con exito'})
       })
       .catch(err => {
         res.status(400).json({status: "error", message: err.message});
@@ -108,11 +109,19 @@ const loginUserCookieCtrl = async(req, res) => {
   }
 
   const togglePremiumCtrl = async(req,res) => {
+    const identification = await userService.getDocument(uid, identification)
+    const proofAdress = await userService.getDocument(uid, proofAdress)
+    const bankProof = await userService.getDocument(uid, bankProof)
+    if(user.role === "USER" && 
+      (!identification || !proofAdress || !bankProof)){
+        res.status(400).json({status: "error", message: "Para ser premium nesecitas subir tus documentos de identidad"});
+    }
     userService.togglePremium(req.params.uid)
     .then(user => {
       if (user.role === "ADMIN"){
         res.status(400).json({status: "error", message: "No se puede cambiar el rol de un ADMIN"});
       }
+
       res.status(200).json({status: "ok", message: `El Rol fue cambiado a ${user.role} con exito `});
       })
     .catch(err => {
@@ -120,7 +129,30 @@ const loginUserCookieCtrl = async(req, res) => {
     });
   }
 
+  const uploadDocumentsCtrl = async(req,res) => {
+    try {
+      const dbFilesWrited = []
+      if (!req.files.identification[0] ||
+          !req.files.proofAdress[0] ||
+          !req.files.bankProof[0])
+      {
+        throw Error("A document is missing")
+      }
+
+      for (const key in req.files) {
+        req.files[key].forEach( (file)=> {
+          dbFilesWrited.push( userService.setDocument(req.user._id, file.fieldname, file.path) )
+        });
+      }
+      const result = await Promise.all(dbFilesWrited)
+      res.status(200).json({status: "sucsess", message: result[2]});
+    } catch (err) {
+      res.status(400).json({status: "error", message: err.message});
+    }
+  }
+
 export {
+  uploadDocumentsCtrl,
     logoutUserCtrl,
     loginUserCookieCtrl,
     currentUserCtrl,

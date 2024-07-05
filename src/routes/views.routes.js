@@ -175,4 +175,12 @@ router.get('/updatepassword/:token', loggedRedirect, (req, res) => {
     })
 })
 
+router.get('/perfil', authMdwFront, async(req, res) => {
+    res.render("profile", {
+        title: "Practica Integradora 3",
+        user: req.user,
+        style: "styles.css"
+    })
+})
+
 export default router

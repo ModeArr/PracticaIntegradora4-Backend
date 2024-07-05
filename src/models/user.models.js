@@ -32,6 +32,16 @@ const userSchema = new Schema({
   resetLink: {
     type: String, 
     default: ''
+  },
+  documents: [
+    {
+      name: String,
+      reference: String,
+    }
+  ],
+  last_connection: {
+    type: Date,
+    default: Date.now,
   }
 });
 

@@ -39,4 +39,16 @@ export default class UserRepository {
     togglePremium = async (uid) => {
         return this.dao.togglePremium(uid)
     }
+
+    setLastConnection = async (uid) => {
+        return this.dao.setLastConnection(uid)
+    }
+
+    setDocument = async (uid, type, path) => {
+        return this.dao.setDocument(uid, type, path)
+    }
+
+    getDocument = async (uid, type) => {
+        return this.dao.getDocument(uid, type)
+    }
 }
